@@ -1,0 +1,1 @@
+(function($){"use strict";const ps=new PerfectScrollbar('.right-sidebar',{useBothWheelAxes:true,suppressScrollX:true,});})(jQuery);
