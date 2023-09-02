@@ -20,7 +20,6 @@
                                     <br />
                                     {!! session()->get('message') !!}
                                 @endif
-                                
                                 <div class="mt-4">
                                     <form method="POST" action="{{ route('changeof-nodal-reserach-center-form') }}"
                                         enctype="multipart/form-data" onsubmit="">
