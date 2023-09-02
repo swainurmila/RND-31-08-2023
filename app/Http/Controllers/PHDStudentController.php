@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\Helpers;
 use App\Models\ChangeNodalCenter;
+use App\Models\ChangeNodalCentre;
 use App\Models\ChangeResearchSupervisor;
 use App\Models\CoSupervisor;
 use App\Models\CoSupervisorMaster;
@@ -2149,61 +2150,72 @@ class PHDStudentController extends Controller
     //Change of nodal research center code
     public function changeOfNodalResearchCentre()
     {
-        $info = Student::select('p.name', 'students.registration_no', 'students.registration_date', 'p.nodal_id', 'p.enrollment_no', 'p.enrollment_date', 'p.name_of_faculty', 'students.registration_no')
-            ->leftJoin('phd_application_info as p', 'students.id', '=', 'p.stud_id')->orderby('p.id', 'desc')
+        $info = Student::select('p.name', 'students.registration_no', 'students.registration_date', 'p.nodal_id', 'p.enrollment_no', 'p.enrollment_date', 'p.name_of_faculty', 'd.departments_title', 's.supervisor_name', 'nodal_centres.college_name', 'nodal_centres.id as ncr_id', 'p.topic_of_phd_work', 's.sup_id')
+            ->leftJoin('phd_application_info as p', 'students.id', '=', 'p.stud_id')
+            ->orderBy('p.id', 'desc')
+            ->leftJoin('departments as d', 'p.academic_programme', '=', 'd.id')
+            ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
+            ->leftJoin('nodal_centres', 'p.nodal_id', '=', 'nodal_centres.id')
+            // ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
             ->where('students.id', Auth::guard('student')->user()->id)
             ->first();
-        return view('admin.phdstudents.changeof-nodal-reserach-center', compact('info'));
+        $research = NodalCentre::select(['id', 'college_name'])->get();
+        $supervisor = Supervisor::select(['id', 'first_name', 'last_name'])->get();
+        return view('admin.phdstudents.changeof-nodal-reserach-center', compact('info', 'research', 'supervisor'));
     }
-
+    
     public function changeOfNodalResearchCentreForm(Request $request)
     {
         //return $request;
         $this->validate($request, [
             'name'                    => 'required',
             'faculty_of'              => 'required',
-            'registration_no'         => 'required',
             'enrollment_no'           => 'required',
+            'enrollment_date'         => 'required',
             'branch_name'             => 'required',
             'topic_of_research'       => 'required',
             'present_status_research' => 'required',
-            'present_nodal_centre'    => 'required',
-            'present_supervisor_name' => 'required',
-            'co_supervisor_name'      => 'required',
-            'proposed_nodal_centre'   => 'required',
-            'proposed_supervisor'     => 'required',
-            'proposed_co_supervisor'  => 'required',
+            'present_nodal_center'    => 'required', 
+            'present_sup'             => 'required', 
+            'proposed_nodal_center'   => 'required',
+            'proposed_sup'            => 'required',
             'document'                => 'required',
+            'change_reason'           => 'required',
         ]);
-        $change_nodal = new ChangeNodalCenter();
+    
+        // Get the user's application ID
+        $appl_id = PhdApplicationInfo::where('stud_id', Auth::guard('student')->user()->id)->first();
+    
+        // Handle file upload
         if ($file = $request->file('document')) {
-            $data           = $request->file('document');
-            $extension      = $data->getClientOriginalExtension();
-            $filename       = time() . uniqid(rand()) . 'document' . '.' . $extension;
-            $path           = public_path('upload/reason_change_nodal/');
-            $upload_success = $data->move($path, $filename);
-            $upload_file    = '/upload/reason_change_nodal/' . $filename;
+            $extension = $file->getClientOriginalExtension();
+            $filename = time() . uniqid(rand()) . 'document' . '.' . $extension;
+            $path = public_path('upload/reason_change_nodal/');
+            $upload_success = $file->move($path, $filename);
+            $upload_file = '/upload/reason_change_nodal/' . $filename;
         } else {
-            $upload_file = $change_nodal->document;
+            return back()->with('error', 'File upload failed.');
         }
-        $change_nodal->student_id              = Auth::guard('student')->user()->id;
-        $change_nodal->name                    = $request->name;
-        $change_nodal->faculty_of              = $request->faculty_of;
-        $change_nodal->registration_no         = $request->registration_no;
-        $change_nodal->enrollment_no           = $request->enrollment_no;
-        $change_nodal->branch_name             = $request->branch_name;
-        $change_nodal->topic_of_research       = $request->topic_of_research;
-        $change_nodal->present_status_research = $request->present_status_research;
-        $change_nodal->present_nodal_centre    = $request->present_nodal_centre;
-        $change_nodal->present_supervisor_name = $request->present_supervisor_name;
-        $change_nodal->co_supervisor_name      = $request->co_supervisor_name;
-        $change_nodal->proposed_nodal_centre   = $request->proposed_nodal_centre;
-        $change_nodal->proposed_supervisor     = $request->proposed_supervisor;
-        $change_nodal->proposed_co_supervisor  = $request->proposed_co_supervisor;
-        $change_nodal->document                = $upload_file;
+    
+        // Create a new ChangeNodalCentre instance and populate its properties
+        $change_nodal = new ChangeNodalCentre();
+        $change_nodal->stud_id = Auth::guard('student')->user()->id;
+        $change_nodal->appl_id = $appl_id->id;
+        $change_nodal->research_status = $request->present_status_research;
+        $change_nodal->present_nodal_center = $request->ncr_id;
+        $change_nodal->present_sup = $request->sup_id;
+        $change_nodal->proposed_nodal_center = $request->proposed_nodal_center;
+        $change_nodal->proposed_sup = $request->proposed_sup;
+        $change_nodal->change_document = $upload_file;
+        $change_nodal->change_reason = $request->change_reason;
+        $change_nodal->status= 1;
+        // return $change_nodal;
         $change_nodal->save();
+        
+        // Redirect with a success message
         return redirect('/phdstudent/changeof-nodal-reserach-center')->with('message', 'The form has been submitted successfully!');
     }
+    
     public function changeNodalStatus()
     {
         $value = ChangeNodalCenter::all();
