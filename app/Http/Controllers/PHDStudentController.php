@@ -2215,7 +2215,46 @@ class PHDStudentController extends Controller
         // Redirect with a success message
         return redirect('/phdstudent/changeof-nodal-reserach-center')->with('message', 'The form has been submitted successfully!');
     }
-    
+    public function viewNodalChangeOfSupervisor()
+    {
+        $info = Student::select('p.name', 'students.registration_no', 'students.registration_date', 'p.nodal_id', 'p.enrollment_no', 'p.enrollment_date', 'p.name_of_faculty', 'd.departments_title', 's.supervisor_name', 'nodal_centres.college_name', 'nodal_centres.id as ncr_id', 'p.topic_of_phd_work', 's.sup_id')
+            ->leftJoin('phd_application_info as p', 'students.id', '=', 'p.stud_id')
+            ->orderBy('p.id', 'desc')
+            ->leftJoin('departments as d', 'p.academic_programme', '=', 'd.id')
+            ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
+            ->leftJoin('nodal_centres', 'p.nodal_id', '=', 'nodal_centres.id')
+            // ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
+            ->where('students.id', Auth::guard('student')->user()->id)
+            ->first();
+
+        $details = DB::table('change_nodal_centres as c')
+            ->select('*', 's.first_name', 's.last_name', 'c.id as app_id')
+            ->leftJoin('supervisors as s', 'c.present_sup', '=', 's.id')
+            ->where('stud_id', Auth::guard('student')
+                ->user()->id)
+            ->first();
+        $pro_sup =  DB::table('change_nodal_centres as c')
+            ->select('s.first_name', 's.last_name')
+            ->leftJoin('supervisors as s', 'c.present_sup', '=', 's.id')
+            ->where('stud_id', Auth::guard('student')
+                ->user()->id)
+            ->first();
+        $pre_cosup = DB::table('change_nodal_centres as c')
+            ->select('s.first_name', 's.last_name')
+            ->leftJoin('supervisors as s', 'c.proposed_sup', '=', 's.id')
+            ->where('stud_id', Auth::guard('student')
+                ->user()->id)
+            ->first();
+        $pro_cosup = DB::table('change_nodal_centres as c')
+            ->select('s.first_name', 's.last_name')
+            ->leftJoin('supervisors as s', 'c.present_cosup', '=', 's.id')
+            ->where('stud_id', Auth::guard('student')
+                ->user()->id)
+            ->first();
+
+        return view('admin.phdstudents.change-nodal-supervisor-view', compact('info', 'details', 'pro_sup', 'pre_cosup', 'pro_cosup'));
+    }
+
     public function changeNodalStatus()
     {
         $value = ChangeNodalCenter::all();

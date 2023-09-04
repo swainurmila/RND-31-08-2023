@@ -155,6 +155,7 @@
                                             // Handle the case when $reg is null
                                             $diffInDays = null; // or set a default value, or perform other actions
                                         }
+                                        $change_nodal_supervisor = DB::table('change_nodal_centres')->where('stud_id', Auth::guard('student')->user()->id)->first(['status']);
                                     @endphp
 
                                     <div class="dropdown-menu" aria-labelledby="topnav-ecommerce">
@@ -225,7 +226,7 @@
                                 <a href="{{ route('change-title-researchwork') }}" class="dropdown-item">Researchwork
                                     Change Title</a>
                                 {{-- <a href="{{ route('changeof-nodal-reserach-center') }}" class="dropdown-item">Change Nodal Centre</a> --}}
-                                <div class="dropdown">
+                                {{-- <div class="dropdown">
                                     <a class="dropdown-item dropdown-toggle arrow-none" href="#"
                                         id="topnav-ecommerce" role="button" data-bs-toggle="dropdown"
                                         aria-haspopup="true" aria-expanded="false">
@@ -238,7 +239,14 @@
                                         <a href="{{ route('change-nodal-status') }}" class="dropdown-item">View
                                             status</a>
                                     </div>
-                                </div>
+                                </div> --}}
+                                @if ($change_nodal_supervisor && $change_nodal_supervisor->status != 0)
+                                <a href="{{ route('change-nodal-supervisor-view') }}"
+                                    class="dropdown-item">Apply for change nodal center</a>
+                            @else
+                                <a href="{{ route('changeof-nodal-reserach-center') }}"
+                                    class="dropdown-item">Apply for change nodal center</a>
+                            @endif
                                 @if ($change_supervisor && $change_supervisor->status != 0)
                                 <a href="{{ route('change-supervisor-view') }}" class="dropdown-item">Apply
                                     for change supervisor/co-supervisor</a>
