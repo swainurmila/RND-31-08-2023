@@ -239,8 +239,14 @@
                                             status</a>
                                     </div>
                                 </div>
-                                <a href="{{ route('changeof-research-supervisor') }}" class="dropdown-item">Apply for
-                                    change supervisor/co-supervisor</a>
+                                @if ($change_supervisor && $change_supervisor->status != 0)
+                                <a href="{{ route('change-supervisor-view') }}" class="dropdown-item">Apply
+                                    for change supervisor/co-supervisor</a>
+                                    
+                                @else
+                                <a href="{{ route('changeof-research-supervisor') }}" class="dropdown-item">Apply
+                                    for change supervisor/co-supervisor</a>
+                                @endif
                                 {{-- <a href="{{ route('changeof-research-supervisor') }}" class="dropdown-item">Change Of Research Supervisor</a> --}}
                                 {{-- <a href="{{ route('co-supervisor-change-list') }}" class="dropdown-item">Change Of Research Supervisor List</a> --}}
                                 <a href="{{ route('changeof-nodal-reserach-centrelist') }}"

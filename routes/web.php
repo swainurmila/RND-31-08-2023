@@ -283,6 +283,7 @@ Route::group(['prefix' => 'phdstudent', 'middleware' => 'role:student'], functio
 
     Route::get('/changeof-research-supervisor', [PHDStudentController::class, 'changeOfResearchSupervisor'])->name('changeof-research-supervisor');
     Route::post('/changeof-research-supervisor-form', [PHDStudentController::class, 'changeOfResearchSupervisorForm'])->name('changeof-research-supervisor-form');
+    Route::get('/change-supervisor-view', [PHDStudentController::class, 'viewChangeOfSupervisor'])->name('change-supervisor-view');
     Route::get('/co-supervisor-change-from/{id}', [PHDStudentController::class, 'viewChangeSupervisorForm'])->name('co-supervisor-change-form/{id}');
     Route::get('/changeof-nodal-reserach-centrelist', [PHDStudentController::class, 'changeOfNodalResearchCentreList'])->name('changeof-nodal-reserach-centrelist');
     Route::get('/changeof-nodal-reserach-centre-view/{id}', [PHDStudentController::class, 'changeOfNodalResearchCentreView'])->name('changeof-nodal-reserach-centre-view/{id}');

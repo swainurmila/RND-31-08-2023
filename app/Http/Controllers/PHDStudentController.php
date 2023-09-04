@@ -2220,69 +2220,80 @@ class PHDStudentController extends Controller
     }
     //End of change of nodal research center code
 
-    //Change of research supervisor
-    public function changeOfResearchSupervisor()
-    {
-        $info = Student::select('p.name', 'students.registration_no', 'students.registration_date', 'p.nodal_id', 'p.enrollment_no', 'p.enrollment_date', 'p.name_of_faculty', 'students.registration_no', 'nodal_centres.college_name', 'p.academic_programme', 'd.departments_title', 'p.topic_of_phd_work', 's.supervisor_name', 's.co_supervisor_name')
-            ->leftJoin('phd_application_info as p', 'students.id', '=', 'p.stud_id')->orderby('p.id', 'desc')
-            ->leftJoin('nodal_centres', 'p.nodal_id', '=', 'nodal_centres.id')
-            ->leftJoin('departments as d', 'p.academic_programme', '=', 'd.id')
-            ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
-            ->where('students.id', Auth::guard('student')->user()->id)
-            ->first();
-        //$nodal      = NodalCentre::all();
-        $supervisor = Supervisor::select(['id', 'first_name', 'last_name'])->get();
+     //Change of research supervisor
+ public function changeOfResearchSupervisor()
+ {
+     $info = Student::select('p.name', 'students.registration_no', 'students.registration_date', 'p.nodal_id', 'p.enrollment_no', 'p.enrollment_date', 'p.name_of_faculty', 'students.registration_no', 'nodal_centres.college_name', 'p.academic_programme', 'd.departments_title', 'p.topic_of_phd_work', 's.supervisor_name', 's.co_supervisor_name', 's.sup_id', 's.cosup_id')
+   ->leftJoin('phd_application_info as p', 'students.id', '=', 'p.stud_id')->orderby('p.id', 'desc')
+   ->leftJoin('nodal_centres', 'p.nodal_id', '=', 'nodal_centres.id')
+   ->leftJoin('departments as d', 'p.academic_programme', '=', 'd.id')
+   ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
+   ->where('students.id', Auth::guard('student')->user()->id)
+   ->first();
+  //$nodal      = NodalCentre::all();
+  $supervisor = Supervisor::select(['id', 'first_name', 'last_name'])->get();
 
-        // $research = DB::table('nodal_centres')->select('college_name', 'id')->get();
-        return view('admin.phdstudents.changeof-research-supervisor', compact('info', 'supervisor'));
-    }
-    public function changeOfResearchSupervisorForm(Request $request)
-    {
-        //return $request;
-        $this->validate($request, [
-            'phd_student_name'             => 'required',
-            'branch_name'                  => 'required',
-            'enrollment_no'                => 'required',
-            'title_of_phd'                 => 'required',
-            'present_research_supervisor'  => 'required',
-            'proposed_research_supervisor' => 'required',
-            'approved_by_bput'             => 'required',
-            'reason_for_change'            => 'required',
-        ]);
-        $change_sup = new ChangeResearchSupervisor();
-        if ($file = $request->file('document')) {
-            $data           = $request->file('document');
-            $extension      = $data->getClientOriginalExtension();
-            $filename       = time() . uniqid(rand()) . 'document' . '.' . $extension;
-            $path           = public_path('upload/Supervisor_recognisation_letter/');
-            $upload_success = $data->move($path, $filename);
-            $upload_file    = '/upload/Supervisor_recognisation_letter/' . $filename;
-        } else {
-            $upload_file = $change_sup->recognisation_letter;
-        }
-        $change_sup->student_id                   = Auth::guard('student')->user()->id;
-        $change_sup->phd_student_name             = $request->phd_student_name;
-        $change_sup->name_of_ncr                  = $request->present_center;
-        $change_sup->registration_no              = $request->registration_no;
-        $change_sup->enrollment_no                = $request->enrollment_no;
-        $change_sup->branch_name                  = $request->branch_name;
-        $change_sup->title_of_phd                 = $request->title_of_phd;
-        $change_sup->present_research_supervisor  = $request->present_research_supervisor;
-        $change_sup->proposed_research_supervisor = $request->proposed_research_supervisor;
-        $change_sup->pres_cosupervisor_name       = $request->pres_cosupervisor_name;
-        $change_sup->pros_resc_cosupervisor       = $request->pros_resc_cosupervisor;
-        $change_sup->approved_by_bput             = $request->approved_by_bput;
-        $change_sup->recognisation_letter         = $upload_file;
-        $change_sup->reason_for_change            = $request->reason_for_change;
-        $change_sup->status                       = 1;
-        if ($change_sup->save()) {
-            $msg = '<div class="offset-md-0 col-md-offset-0 col-md-12 animated fadeInDown alert alert-success" role="alert"><strong>Data Insert Successfull.</strong></div>';
-            return redirect("/phdstudent/co-supervisor-change-list")->with('message', $msg);
-        } else {
-            $msg = '<div class="offset-md-0 col-md-offset-0 col-md-12 animated fadeInDown alert alert-danger" role="alert"><strong>Data Insert Failed.</strong></div>';
-            return redirect("/phdstudent/co-supervisor-change-list")->with('message', $msg);
-        }
-    }
+  // $research = DB::table('nodal_centres')->select('college_name', 'id')->get();
+  return view('admin.phdstudents.change-supervisor.changeof-research-supervisor', compact('info', 'supervisor'));
+ }
+ public function changeOfResearchSupervisorForm(Request $request)
+ {
+  //return $request;
+  $this->validate($request, [
+   'phd_student_name'             => 'required',
+   'branch_name'                  => 'required',
+   'enrollment_no'                => 'required',
+   'title_of_phd'                 => 'required',
+   'present_research_supervisor'  => 'required',
+   'proposed_research_supervisor' => 'required',
+   'approved_by_bput'             => 'required',
+   'reason_for_change'            => 'required',
+  ]);
+  $appl_id = PhdApplicationInfo::where('stud_id', Auth::guard('student')->user()->id)->first('id');
+  $change_sup = new ChangeResearchSupervisor();
+  if ($file = $request->file('document')) {
+   $data           = $request->file('document');
+   $extension      = $data->getClientOriginalExtension();
+   $filename       = time() . uniqid(rand()) . 'document' . '.' . $extension;
+   $path           = public_path('upload/Supervisor_recognisation_letter/');
+   $upload_success = $data->move($path, $filename);
+   $upload_file    = '/upload/Supervisor_recognisation_letter/' . $filename;
+  } else {
+   $upload_file = $change_sup->recognisation_letter;
+  }
+  $change_sup->student_id                   = Auth::guard('student')->user()->id;
+  $change_sup->appl_id                      = $appl_id->id;
+  $change_sup->present_research_supervisor  = $request->pre_sup_id;
+  $change_sup->proposed_research_supervisor = $request->proposed_research_supervisor;
+  $change_sup->pres_cosupervisor_name       = $request->pres_cosup_id;
+  $change_sup->pros_resc_cosupervisor       = $request->pros_resc_cosupervisor;
+  $change_sup->approved_by_bput             = $request->approved_by_bput;
+  $change_sup->recognisation_letter         = $upload_file;
+  $change_sup->reason_for_change            = $request->reason_for_change;
+  $change_sup->status                       = 1;
+  if ($change_sup->save()) {
+   $msg = '<div class="offset-md-0 col-md-offset-0 col-md-12 animated fadeInDown alert alert-success" role="alert"><strong>Data Insert Successfull.</strong></div>';
+   return redirect("/phdstudent/change-supervisor-view")->with('message', $msg);
+  } else {
+   $msg = '<div class="offset-md-0 col-md-offset-0 col-md-12 animated fadeInDown alert alert-danger" role="alert"><strong>Data Insert Failed.</strong></div>';
+   return redirect("/phdstudent/change-supervisor-view")->with('message', $msg);
+  }
+ }
+ public function viewChangeOfSupervisor()
+ {
+  $info = Student::select('p.name', 'students.registration_no', 'students.registration_date', 'p.nodal_id', 'p.enrollment_no', 'p.enrollment_date', 'p.name_of_faculty', 'students.registration_no', 'nodal_centres.college_name', 'p.academic_programme', 'd.departments_title', 'p.topic_of_phd_work', 's.supervisor_name', 's.co_supervisor_name', 's.sup_id', 's.cosup_id')
+  ->leftJoin('phd_application_info as p', 'students.id', '=', 'p.stud_id')->orderby('p.id', 'desc')
+  ->leftJoin('nodal_centres', 'p.nodal_id', '=', 'nodal_centres.id')
+  ->leftJoin('departments as d', 'p.academic_programme', '=', 'd.id')
+  ->leftJoin('phd_supervisors as s', 'p.id', '=', 's.appl_id')
+  ->where('students.id', Auth::guard('student')->user()->id)
+  ->first();
+  $details = DB::table('change_research_supervisor_name as c')->select('*', 's.first_name', 's.last_name', 'c.id as app_id')->leftJoin('supervisors as s', 'c.present_research_supervisor', '=', 's.id')->where('student_id', Auth::guard('student')->user()->id)->first();
+   $pro_sup =  DB::table('change_research_supervisor_name as c')->select('s.first_name', 's.last_name')->leftJoin('supervisors as s', 'c.proposed_research_supervisor', '=', 's.id')->where('student_id', Auth::guard('student')->user()->id)->first();
+   $pre_cosup = DB::table('change_research_supervisor_name as c')->select('s.first_name', 's.last_name')->leftJoin('supervisors as s', 'c.pres_cosupervisor_name', '=', 's.id')->where('student_id', Auth::guard('student')->user()->id)->first();
+   $pro_cosup = DB::table('change_research_supervisor_name as c')->select('s.first_name', 's.last_name')->leftJoin('supervisors as s', 'c.pros_resc_cosupervisor', '=', 's.id')->where('student_id', Auth::guard('student')->user()->id)->first();
+  return view('admin.phdstudents.change-supervisor.co-supervisor-change-view', compact('details', 'info', 'pro_sup', 'pre_cosup', 'pro_cosup'));
+ }
     public function changeOfCoSupervisorList()
     {
         $nodal = NodalCentre::select('nodal_centres.college_name', 'p.name_of_ncr')
